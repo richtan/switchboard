@@ -1,19 +1,28 @@
 {
   "name": "mpprouter",
   "version": "1.0.0",
+  "description": "Cost-optimized API router with MCP support and automatic MPP micropayments",
   "main": "index.js",
   "bin": {
     "mpprouter": "./bin/mpprouter.mjs"
   },
+  "files": [
+    "bin/",
+    "src/mcp/client.ts",
+    "README.md"
+  ],
   "scripts": {
     "dev": "npx tsx --env-file=.env src/index.ts",
     "start": "./node_modules/.bin/tsx --env-file=.env src/index.ts --no-tui",
     "demo": "npx tsx scripts/demo.ts"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["mcp", "mpp", "micropayments", "api-router", "tempo"],
+  "author": "richtan",
   "license": "ISC",
-  "description": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/richtan/mpprouter.git"
+  },
   "dependencies": {
     "@hono/node-server": "^1.19.11",
     "@modelcontextprotocol/sdk": "^1.27.1",
