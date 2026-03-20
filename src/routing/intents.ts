@@ -14,7 +14,7 @@ export const INTENTS: IntentDef[] = [
     buildUrl: (p, params) => ({
       url: `${p.serviceUrl}${p.endpointPath}`,
       method: "POST",
-      body: JSON.stringify({ query: params.q || params.query || "", num_results: parseInt(params.num || "5") }),
+      body: JSON.stringify({ query: params.q || params.query || "", num_results: parseInt(params.num || "5", 10) || 5 }),
     }),
   },
   {

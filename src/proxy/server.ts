@@ -4,11 +4,37 @@ import { ServiceStore } from "../discovery/store.js";
 import { PaymentTracker } from "../payments/tracker.js";
 import { RequestHandler } from "./handler.js";
 
-const PORT = 3402;
+const PORT = parseInt(process.env.PORT || "3402", 10) || 3402;
 
 export function startProxy(store: ServiceStore, tracker: PaymentTracker): { close: () => void } {
   const app = new Hono();
   const handler = new RequestHandler(store, tracker);
+
+  // Request logging
+  app.use("*", async (c, next) => {
+    const start = Date.now();
+    await next();
+    console.log(`${c.req.method} ${c.req.path} ${c.res.status} ${Date.now() - start}ms`);
+  });
+
+  // Auth middleware for spending routes
+  const apiKey = process.env.API_KEY;
+  if (apiKey) {
+    app.use("/intent/*", async (c, next) => {
+      const auth = c.req.header("authorization");
+      if (auth !== `Bearer ${apiKey}`) {
+        return c.json({ error: "Unauthorized" }, 401);
+      }
+      await next();
+    });
+    app.use("/proxy/*", async (c, next) => {
+      const auth = c.req.header("authorization");
+      if (auth !== `Bearer ${apiKey}`) {
+        return c.json({ error: "Unauthorized" }, 401);
+      }
+      await next();
+    });
+  }
 
   // Health check
   app.get("/health", (c) => c.json({ status: "ok", services: store.getServiceCount(), intents: store.getAllIntents().length }));

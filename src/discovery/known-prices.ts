@@ -67,7 +67,7 @@ export const KNOWN_PRICES: Record<string, Record<string, number>> = {
     "/v1/chat/completions": 0.003,
   },
   openrouter: {
-    "/api/v1/chat/completions": 0.003,
+    // Dynamic pricing — depends on chosen model ($0 to $60/M tokens)
   },
   gemini: {
     // Variable

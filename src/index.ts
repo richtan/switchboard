@@ -12,8 +12,9 @@ const BANNER = `
 {/cyan-fg}{/bold}`;
 
 async function main() {
-  // Check for --no-tui flag
-  const noTui = process.argv.includes("--no-tui");
+  // Auto-detect production: force --no-tui when no TTY available
+  const isProduction = !!process.env.RAILWAY_ENVIRONMENT || process.env.NODE_ENV === "production";
+  const noTui = process.argv.includes("--no-tui") || isProduction;
 
   // Step 1: Load services
   if (noTui) console.log("Loading MPP services...");
@@ -28,7 +29,8 @@ async function main() {
 
   // Step 2: Setup tracker
   const tracker = new PaymentTracker();
-  tracker.setBudget(5.0); // $5 budget for demo
+  const budget = parseFloat(process.env.BUDGET || "5") || 5;
+  tracker.setBudget(budget);
 
   if (noTui) {
     // Console-only mode: log transactions to stdout
@@ -47,8 +49,6 @@ async function main() {
   // Step 4: Start dashboard (unless --no-tui)
   if (!noTui) {
     const { screen } = startDashboard(tracker, store);
-    // Add info to the screen after rendering
-    // The banner and service info are shown through the dashboard widgets
   }
 
   // Graceful shutdown

@@ -51,7 +51,7 @@ export class PaymentTracker extends EventEmitter {
   }
 
   getTransactions(limit?: number): TxEvent[] {
-    if (limit) {
+    if (limit !== undefined) {
       return this.log.slice(-limit);
     }
     return [...this.log];

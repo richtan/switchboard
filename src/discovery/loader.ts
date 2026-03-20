@@ -1,5 +1,4 @@
-import { execSync } from "child_process";
-import { homedir } from "os";
+import { readFileSync } from "fs";
 import { join } from "path";
 
 export interface Endpoint {
@@ -23,13 +22,11 @@ export interface Service {
   endpoints: Endpoint[];
 }
 
-const TEMPO_BIN = join(homedir(), ".tempo", "bin", "tempo");
+// Resolve relative to this file — works with both tsx and compiled JS
+const servicesPath = join(__dirname, "services.json");
 
 export function loadServices(): Service[] {
-  const raw = execSync(`${TEMPO_BIN} wallet services list`, {
-    encoding: "utf-8",
-    timeout: 15000,
-  });
+  const raw = readFileSync(servicesPath, "utf-8");
   const services: Service[] = JSON.parse(raw);
   return services;
 }

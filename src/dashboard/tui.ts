@@ -41,7 +41,7 @@ export function startDashboard(tracker: PaymentTracker, store: ServiceStore) {
 
   // Bottom-left: Price comparison (bar chart)
   const barChart = grid.set(6, 0, 6, 7, contrib.bar, {
-    label: " 📊 PRICE COMPARISON ($/request) ",
+    label: " 📊 PRICE COMPARISON (milli-$/request) ",
     barWidth: 8,
     barSpacing: 2,
     xOffset: 0,

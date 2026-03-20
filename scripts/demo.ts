@@ -3,9 +3,11 @@
  * to demonstrate intent routing, auto-payment, and savings tracking.
  *
  * Usage: npx tsx scripts/demo.ts
+ * Env: PROXY_URL (default http://localhost:3402), API_KEY (optional auth token)
  */
 
-const PROXY = "http://localhost:3402";
+const PROXY = process.env.PROXY_URL || "http://localhost:3402";
+const API_KEY = process.env.API_KEY;
 
 interface DemoRequest {
   label: string;
@@ -29,21 +31,27 @@ async function fireRequest(req: DemoRequest) {
   const qs = new URLSearchParams(req.params).toString();
   const url = `${PROXY}/intent/${req.intent}?${qs}`;
 
-  const res = await fetch(url, { method: "POST" });
   const headers: Record<string, string> = {};
+  if (API_KEY) {
+    headers["Authorization"] = `Bearer ${API_KEY}`;
+  }
+
+  const res = await fetch(url, { method: "POST", headers });
+  const switchboardHeaders: Record<string, string> = {};
   res.headers.forEach((v, k) => {
-    if (k.startsWith("x-switchboard")) headers[k] = v;
+    if (k.startsWith("x-switchboard")) switchboardHeaders[k] = v;
   });
 
   return {
     status: res.status,
-    headers,
+    headers: switchboardHeaders,
     bodyPreview: (await res.text()).slice(0, 200),
   };
 }
 
 async function main() {
   console.log("\n⚡ Switchboard Demo — Intelligent MPP Router\n");
+  console.log(`Target: ${PROXY}`);
   console.log("Firing requests through the proxy...\n");
 
   // Check proxy is up
