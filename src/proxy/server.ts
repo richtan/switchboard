@@ -3,6 +3,7 @@ import { serve } from "@hono/node-server";
 import { ServiceStore } from "../discovery/store.js";
 import { PaymentTracker } from "../payments/tracker.js";
 import { RequestHandler } from "./handler.js";
+import { getDashboardHtml, createEventStream } from "../dashboard/web.js";
 
 const PORT = parseInt(process.env.PORT || "3402", 10) || 3402;
 
@@ -35,6 +36,10 @@ export function startProxy(store: ServiceStore, tracker: PaymentTracker): { clos
       await next();
     });
   }
+
+  // Web dashboard (read-only, no auth)
+  app.get("/", (c) => c.html(getDashboardHtml()));
+  app.get("/events", (c) => createEventStream(c, tracker));
 
   // Health check
   app.get("/health", (c) => c.json({ status: "ok", services: store.getServiceCount(), intents: store.getAllIntents().length }));
