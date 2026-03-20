@@ -16,7 +16,13 @@
     "start": "./node_modules/.bin/tsx --env-file=.env src/index.ts --no-tui",
     "demo": "npx tsx scripts/demo.ts"
   },
-  "keywords": ["mcp", "mpp", "micropayments", "api-router", "tempo"],
+  "keywords": [
+    "mcp",
+    "mpp",
+    "micropayments",
+    "api-router",
+    "tempo"
+  ],
   "author": "richtan",
   "license": "ISC",
   "repository": {
@@ -26,6 +32,7 @@
   "dependencies": {
     "@hono/node-server": "^1.19.11",
     "@modelcontextprotocol/sdk": "^1.27.1",
+    "better-sqlite3": "^12.8.0",
     "blessed": "^0.1.81",
     "blessed-contrib": "^4.11.0",
     "hono": "^4.12.8",
@@ -35,6 +42,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "@types/blessed": "^0.1.27",
     "@types/node": "^25.5.0",
     "typescript": "^5.9.3"

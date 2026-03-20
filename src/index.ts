@@ -1,5 +1,7 @@
+import path from "path";
 import { loadServices } from "./discovery/loader.js";
 import { ServiceStore } from "./discovery/store.js";
+import { openDb } from "./payments/db.js";
 import { PaymentTracker } from "./payments/tracker.js";
 import { startProxy, PORT, type PaymentMode } from "./proxy/server.js";
 import { startDashboard } from "./dashboard/tui.js";
@@ -47,8 +49,18 @@ async function main() {
     console.log(`Payment mode: ${paymentMode}`);
   }
 
-  // Step 2: Setup tracker
-  const tracker = new PaymentTracker();
+  // Step 2: Setup tracker with SQLite persistence
+  const dataDir = process.env.DATA_DIR || "/data";
+  let db: ReturnType<typeof openDb> | null = null;
+  let tracker: PaymentTracker;
+  try {
+    db = openDb(path.join(dataDir, "mpprouter.db"));
+    tracker = PaymentTracker.hydrate(db);
+    if (noTui) console.log(`Database opened at ${path.join(dataDir, "mpprouter.db")}`);
+  } catch (err) {
+    if (noTui) console.log(`Database unavailable (${(err as Error).message}), running in-memory only`);
+    tracker = new PaymentTracker();
+  }
   const budget = parseFloat(process.env.BUDGET || "5") || 5;
   tracker.setBudget(budget);
 
@@ -76,14 +88,13 @@ async function main() {
   }
 
   // Graceful shutdown
-  process.on("SIGINT", () => {
+  const shutdown = () => {
     proxy.close();
+    if (db) db.close();
     process.exit(0);
-  });
-  process.on("SIGTERM", () => {
-    proxy.close();
-    process.exit(0);
-  });
+  };
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
 }
 
 main().catch((err) => {

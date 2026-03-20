@@ -1,4 +1,6 @@
 import { EventEmitter } from "events";
+import type Database from "better-sqlite3";
+import { insertTx, loadRecentTx, loadAggregates } from "./db.js";
 
 export interface TxEvent {
   timestamp: Date;
@@ -28,6 +30,25 @@ export class PaymentTracker extends EventEmitter {
   private totalRevenue = 0;
   private totalLoss = 0;
   private budget: number | null = null;
+  private db: Database.Database | null = null;
+
+  constructor(db?: Database.Database) {
+    super();
+    this.db = db ?? null;
+  }
+
+  /** Create a tracker hydrated from persisted SQLite data */
+  static hydrate(db: Database.Database): PaymentTracker {
+    const tracker = new PaymentTracker(db);
+    const agg = loadAggregates(db);
+    tracker.totalSpent = agg.totalSpent;
+    tracker.totalSaved = agg.totalSaved;
+    tracker.totalCharged = agg.totalCharged;
+    tracker.totalRevenue = agg.totalRevenue;
+    tracker.totalLoss = agg.totalLoss;
+    tracker.log = loadRecentTx(db, MAX_LOG);
+    return tracker;
+  }
 
   record(event: TxEvent) {
     this.log.push(event);
@@ -54,6 +75,10 @@ export class PaymentTracker extends EventEmitter {
 
     if (event.savedVsNext != null && event.savedVsNext > 0) {
       this.totalSaved += event.savedVsNext;
+    }
+
+    if (this.db) {
+      try { insertTx(this.db, event); } catch (_) { /* best-effort */ }
     }
 
     this.emit("transaction", event);
