@@ -546,42 +546,59 @@ export function getDashboardHtml(paymentMode: PaymentMode = "free"): string {
 
   /* ── Install Bar ── */
   .install-bar {
+    border-top: 1px solid var(--border);
+    padding: 14px 20px;
+  }
+
+  .install-header {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 10px;
-    padding: 12px 20px;
-    border-top: 1px solid var(--border);
+    justify-content: space-between;
+    margin-bottom: 10px;
   }
 
   .install-label {
     font-family: var(--sans);
-    font-size: 0.68rem;
-    color: var(--text-faint);
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-weight: 500;
   }
 
-  .install-cmd {
+  .install-copy {
     font-family: var(--mono);
-    font-size: 0.72rem;
+    font-size: 0.6rem;
     color: var(--accent);
-    background: rgba(99,220,190,0.06);
-    border: 1px solid rgba(99,220,190,0.15);
-    padding: 4px 12px;
-    border-radius: 4px;
+    background: none;
+    border: 1px solid rgba(99,220,190,0.2);
+    border-radius: 3px;
+    padding: 2px 8px;
     cursor: pointer;
-    transition: background 150ms ease;
-    user-select: all;
+    transition: all 150ms ease;
   }
 
-  .install-cmd:hover {
-    background: rgba(99,220,190,0.12);
+  .install-copy:hover {
+    background: rgba(99,220,190,0.08);
   }
 
-  .install-cmd.copied {
+  .install-copy.copied {
     color: var(--gold);
     border-color: rgba(245,183,49,0.3);
-    background: rgba(245,183,49,0.06);
   }
+
+  .install-code {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    line-height: 1.6;
+    color: var(--text-muted);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 10px 14px;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  .install-code { color: var(--accent); }
 
   .arch-arrow {
     color: var(--text-faint);
@@ -683,8 +700,11 @@ export function getDashboardHtml(paymentMode: PaymentMode = "free"): string {
         </div>
       </div>
       <div class="install-bar">
-        <span class="install-label">Add to Claude Code:</span>
-        <span class="install-cmd" id="install-cmd" title="Click to copy">npx mpprouter</span>
+        <div class="install-header">
+          <span class="install-label">Add to Claude Code</span>
+          <button class="install-copy" id="install-copy">copy</button>
+        </div>
+        <div class="install-code" id="install-code">claude mcp add mpprouter -t stdio -e SPENDING_KEY=0x... -- npx -y mpprouter</div>
       </div>
     </div>
 
@@ -921,15 +941,16 @@ export function getDashboardHtml(paymentMode: PaymentMode = "free"): string {
   }
 
   // Copy install command
-  var installCmd = document.getElementById('install-cmd');
-  if (installCmd) {
-    installCmd.addEventListener('click', function() {
-      navigator.clipboard.writeText('npx mpprouter').then(function() {
-        installCmd.textContent = 'copied!';
-        installCmd.classList.add('copied');
+  var copyBtn = document.getElementById('install-copy');
+  if (copyBtn) {
+    var installCmd = 'claude mcp add mpprouter -t stdio -e SPENDING_KEY=0x... -- npx -y mpprouter';
+    copyBtn.addEventListener('click', function() {
+      navigator.clipboard.writeText(installCmd).then(function() {
+        copyBtn.textContent = 'copied!';
+        copyBtn.classList.add('copied');
         setTimeout(function() {
-          installCmd.textContent = 'npx mpprouter';
-          installCmd.classList.remove('copied');
+          copyBtn.textContent = 'copy';
+          copyBtn.classList.remove('copied');
         }, 1500);
       });
     });
