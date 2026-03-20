@@ -1,8 +1,8 @@
 import { Mppx, tempo, Transport } from "mppx/server";
 import { Credential } from "mppx";
 
-// Base USDC on Base mainnet
-const USDC_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" as `0x${string}`;
+// USDC.e (Bridged USDC via Stargate) on Tempo
+const USDC_ADDRESS = "0x20c000000000000000000000b9537d11c60e8b50" as `0x${string}`;
 
 const RECEIVING_ADDRESS = process.env.RECEIVING_ADDRESS;
 const SECRET_KEY = process.env.MPP_SECRET_KEY;
