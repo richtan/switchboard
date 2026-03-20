@@ -2,6 +2,9 @@
   "name": "mpprouter",
   "version": "1.0.0",
   "main": "index.js",
+  "bin": {
+    "mpprouter": "./bin/mpprouter.mjs"
+  },
   "scripts": {
     "dev": "npx tsx --env-file=.env src/index.ts",
     "start": "./node_modules/.bin/tsx --env-file=.env src/index.ts --no-tui",
