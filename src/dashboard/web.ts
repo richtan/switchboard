@@ -9,459 +9,838 @@ export function getDashboardHtml(paymentMode: PaymentMode = "free"): string {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MPP Router</title>
+<title>mpprouter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+  :root {
+    --bg: #06080d;
+    --surface: #0c1018;
+    --surface-raised: #111722;
+    --border: rgba(255,255,255,0.06);
+    --border-accent: rgba(99,220,190,0.2);
+    --text: #d1d5db;
+    --text-muted: #6b7280;
+    --text-faint: #374151;
+    --accent: #63dcbe;
+    --accent-dim: rgba(99,220,190,0.12);
+    --gold: #f5b731;
+    --gold-dim: rgba(245,183,49,0.12);
+    --red: #ef5350;
+    --red-dim: rgba(239,83,80,0.12);
+    --blue: #5b9cf6;
+    --blue-dim: rgba(91,156,246,0.12);
+    --mono: 'IBM Plex Mono', 'SF Mono', monospace;
+    --sans: 'Instrument Sans', -apple-system, sans-serif;
+    --radius: 8px;
+  }
+
   body {
-    background: #0b1120;
-    color: #e2e8f0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
     min-height: 100vh;
-    padding: 16px;
+    overflow-x: hidden;
   }
 
-  .mono {
-    font-family: "SF Mono", "Fira Code", "Cascadia Code", "JetBrains Mono", monospace;
+  /* Subtle dot grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 24px 24px;
+    pointer-events: none;
+    z-index: 0;
   }
 
+  .shell {
+    position: relative;
+    z-index: 1;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  /* ── Header ── */
   header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 20px;
-    margin-bottom: 16px;
-    background: #131c2e;
-    border: 1px solid rgba(56, 189, 248, 0.15);
-    border-radius: 12px;
+    padding: 0 0 20px 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 24px;
   }
 
   .logo {
-    font-family: "SF Mono", "Fira Code", "Cascadia Code", monospace;
-    font-weight: 700;
-    font-size: 1.1rem;
-    color: #38bdf8;
-  }
-
-  .status {
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 0.8rem;
-    color: #94a3b8;
+    gap: 10px;
   }
 
-  .dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #f87171;
-    transition: background 200ms ease;
+  .logo-mark {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, var(--accent), #3ba692);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: #06080d;
+    font-family: var(--mono);
   }
 
-  .dot.live { background: #4ade80; }
-
-  .mode-badge {
-    font-size: 0.65rem;
+  .logo-text {
+    font-family: var(--mono);
     font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    padding: 2px 8px;
-    border-radius: 9999px;
-    margin-left: 8px;
+    font-size: 0.95rem;
+    color: #f3f4f6;
+    letter-spacing: -0.02em;
   }
 
-  .mode-paid { background: rgba(250, 204, 21, 0.15); color: #facc15; }
-  .mode-auth { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
-  .mode-free { background: rgba(74, 222, 128, 0.15); color: #4ade80; }
+  .logo-text span {
+    color: var(--text-muted);
+    font-weight: 400;
+  }
 
-  .grid {
-    display: grid;
-    grid-template-columns: 1fr;
+  .header-right {
+    display: flex;
+    align-items: center;
     gap: 16px;
   }
 
-  @media (min-width: 768px) {
-    .grid {
-      grid-template-columns: 1.4fr 1fr;
+  .live-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .live-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--red);
+    transition: background 300ms ease;
+  }
+
+  .live-dot.connected {
+    background: var(--accent);
+    box-shadow: 0 0 8px rgba(99,220,190,0.4);
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .mode-tag {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 3px 10px;
+    border-radius: 4px;
+  }
+
+  .mode-paid { background: var(--gold-dim); color: var(--gold); }
+  .mode-auth { background: var(--blue-dim); color: var(--blue); }
+  .mode-free { background: var(--accent-dim); color: var(--accent); }
+
+  /* ── Stats Row ── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+
+  .stat-cell {
+    background: var(--surface);
+    padding: 20px 24px;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .stat-cell:nth-child(2) { animation-delay: 0.05s; }
+  .stat-cell:nth-child(3) { animation-delay: 0.1s; }
+  .stat-cell:nth-child(4) { animation-delay: 0.15s; }
+  .stat-cell:nth-child(5) { animation-delay: 0.2s; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .stat-label {
+    font-size: 0.68rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  .stat-value {
+    font-family: var(--mono);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #f3f4f6;
+    letter-spacing: -0.03em;
+    transition: color 150ms ease;
+  }
+
+  .stat-value.accent { color: var(--accent); }
+  .stat-value.gold { color: var(--gold); }
+  .stat-value.red { color: var(--red); }
+
+  .stat-sub {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  /* ── Main Grid ── */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  @media (min-width: 860px) {
+    .main-grid {
+      grid-template-columns: 1.6fr 1fr;
     }
   }
 
+  /* ── Panel ── */
   .panel {
-    background: #131c2e;
-    border: 1px solid rgba(56, 189, 248, 0.15);
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
     overflow: hidden;
+    animation: fadeUp 0.5s ease both;
+    animation-delay: 0.25s;
   }
 
-  .panel-label {
-    font-size: 0.7rem;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: #38bdf8;
-    margin-bottom: 12px;
-  }
-
-  /* Live Feed */
-  #feed {
-    max-height: 340px;
-    overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: #1e293b #131c2e;
-  }
-
-  .tx-row {
+  .panel-head {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 6px 0;
-    font-size: 0.78rem;
-    border-bottom: 1px solid rgba(255,255,255,0.04);
-    flex-wrap: wrap;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
   }
 
-  .tx-dot {
+  .panel-title {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+  }
+
+  .panel-body {
+    padding: 0;
+  }
+
+  /* ── Live Feed ── */
+  #feed {
+    max-height: 420px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #1f2937 transparent;
+  }
+
+  .tx {
+    display: grid;
+    grid-template-columns: 6px 56px 1fr auto auto auto;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.78rem;
+    transition: background 150ms ease;
+    animation: txSlide 0.3s ease both;
+  }
+
+  @keyframes txSlide {
+    from { opacity: 0; transform: translateX(-12px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .tx:hover {
+    background: rgba(255,255,255,0.02);
+  }
+
+  .tx-pip {
     width: 6px;
     height: 6px;
     border-radius: 50%;
     flex-shrink: 0;
   }
 
-  .tx-dot.success { background: #4ade80; }
-  .tx-dot.payment_error { background: #f87171; }
-  .tx-dot.service_error { background: #facc15; }
+  .tx-pip.success { background: var(--accent); box-shadow: 0 0 6px rgba(99,220,190,0.3); }
+  .tx-pip.payment_error { background: var(--red); }
+  .tx-pip.service_error { background: var(--gold); }
 
   .tx-time {
-    color: #64748b;
-    font-family: "SF Mono", "Fira Code", monospace;
-    font-size: 0.72rem;
-    flex-shrink: 0;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--text-faint);
   }
 
-  .tx-intent {
-    background: rgba(56, 189, 248, 0.12);
-    color: #38bdf8;
-    padding: 1px 7px;
-    border-radius: 9999px;
-    font-size: 0.68rem;
-    font-weight: 500;
-    flex-shrink: 0;
-  }
-
-  .tx-arrow { color: #475569; flex-shrink: 0; }
-
-  .tx-provider {
-    color: #e2e8f0;
-    font-weight: 500;
-    flex-shrink: 0;
-  }
-
-  .tx-amount {
-    font-family: "SF Mono", "Fira Code", monospace;
-    color: #94a3b8;
-    font-size: 0.72rem;
-    flex-shrink: 0;
-  }
-
-  .tx-saved {
-    font-family: "SF Mono", "Fira Code", monospace;
-    color: #4ade80;
-    font-size: 0.72rem;
-    flex-shrink: 0;
-  }
-
-  .tx-latency {
-    font-family: "SF Mono", "Fira Code", monospace;
-    color: #64748b;
-    font-size: 0.72rem;
-    margin-left: auto;
-    flex-shrink: 0;
-  }
-
-  .empty-state {
-    color: #475569;
-    font-size: 0.85rem;
-    padding: 24px 0;
-    text-align: center;
-  }
-
-  /* Savings / Revenue */
-  .hero-saved {
-    font-family: "SF Mono", "Fira Code", monospace;
-    font-size: 2.4rem;
-    font-weight: 700;
-    color: #4ade80;
-    line-height: 1.1;
-  }
-
-  .hero-pct {
-    font-family: "SF Mono", "Fira Code", monospace;
-    font-size: 1.2rem;
-    color: #facc15;
-    margin-top: 4px;
-    margin-bottom: 16px;
-  }
-
-  .stat-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-  }
-
-  .stat-box label {
-    display: block;
-    font-size: 0.65rem;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: #64748b;
-    margin-bottom: 2px;
-  }
-
-  .stat-box .val {
-    font-family: "SF Mono", "Fira Code", monospace;
-    font-size: 1rem;
-    font-weight: 600;
-    color: #e2e8f0;
-    transition: opacity 200ms ease;
-  }
-
-  .stat-box .val.loss { color: #f87171; }
-
-  /* Price Chart */
-  .intent-select {
-    background: #0b1120;
-    color: #e2e8f0;
-    border: 1px solid rgba(56, 189, 248, 0.25);
-    border-radius: 6px;
-    padding: 4px 8px;
-    font-size: 0.75rem;
-    margin-left: 8px;
-    outline: none;
-  }
-
-  .bar-row {
+  .tx-route {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 8px;
+    min-width: 0;
   }
 
-  .bar-name {
-    width: 110px;
-    font-size: 0.75rem;
-    color: #94a3b8;
+  .tx-intent-tag {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 3px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    white-space: nowrap;
+  }
+
+  .tx-arrow {
+    color: var(--text-faint);
+    font-size: 0.65rem;
+  }
+
+  .tx-provider {
+    color: var(--text);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .tx-cost {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--text-muted);
     text-align: right;
-    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .tx-saved {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+
+  .tx-ms {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    color: var(--text-faint);
+    text-align: right;
+    white-space: nowrap;
+    min-width: 48px;
+  }
+
+  .empty-state {
+    padding: 48px 20px;
+    text-align: center;
+    color: var(--text-faint);
+    font-size: 0.82rem;
+  }
+
+  .empty-state .empty-icon {
+    font-size: 1.4rem;
+    margin-bottom: 8px;
+    opacity: 0.4;
+  }
+
+  /* ── Right Column ── */
+  .right-col {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  /* ── Sparkline ── */
+  .sparkline-wrap {
+    padding: 16px 20px;
+  }
+
+  .sparkline-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 48px;
+  }
+
+  .spark-bar {
+    flex: 1;
+    background: var(--accent);
+    border-radius: 2px 2px 0 0;
+    opacity: 0.35;
+    transition: height 300ms ease, opacity 300ms ease;
+    min-height: 2px;
+  }
+
+  .spark-bar.active {
+    opacity: 1;
+  }
+
+  .spark-label {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    color: var(--text-faint);
+  }
+
+  /* ── Price Comparison ── */
+  .intent-picker {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    background: var(--surface-raised);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 3px 8px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .intent-picker:focus {
+    border-color: var(--accent);
+  }
+
+  .price-list {
+    padding: 8px 0;
+  }
+
+  .price-row {
+    display: grid;
+    grid-template-columns: 100px 1fr 64px;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 20px;
+  }
+
+  .price-name {
+    font-size: 0.75rem;
+    color: var(--text-muted);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  .bar-track {
-    flex: 1;
-    height: 22px;
-    background: rgba(255,255,255,0.04);
-    border-radius: 4px;
+  .price-track {
+    height: 20px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 3px;
     overflow: hidden;
+    position: relative;
   }
 
-  .bar-fill {
+  .price-fill {
     height: 100%;
-    border-radius: 4px;
-    transition: width 300ms ease;
-    min-width: 2px;
+    border-radius: 3px;
+    transition: width 400ms cubic-bezier(0.16,1,0.3,1);
+    min-width: 3px;
+    position: relative;
   }
 
-  .bar-price {
-    font-family: "SF Mono", "Fira Code", monospace;
+  .price-fill.cheapest {
+    background: linear-gradient(90deg, var(--accent), rgba(99,220,190,0.5));
+  }
+
+  .price-fill.mid {
+    background: linear-gradient(90deg, var(--gold), rgba(245,183,49,0.4));
+  }
+
+  .price-fill.expensive {
+    background: linear-gradient(90deg, var(--red), rgba(239,83,80,0.4));
+  }
+
+  .price-badge {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: var(--mono);
+    font-size: 0.58rem;
+    font-weight: 600;
+    color: #06080d;
+    letter-spacing: 0.02em;
+  }
+
+  .price-val {
+    font-family: var(--mono);
     font-size: 0.72rem;
-    color: #94a3b8;
-    width: 70px;
-    flex-shrink: 0;
+    color: var(--text-muted);
+    text-align: right;
   }
 
-  /* Service Map */
-  .svc-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.78rem;
+  /* ── Service Map ── */
+  .svc-grid {
+    padding: 4px 0;
+    max-height: 300px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #1f2937 transparent;
   }
 
-  .svc-table th {
-    text-align: left;
-    color: #64748b;
-    font-weight: 500;
-    padding: 6px 8px;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
-    font-size: 0.7rem;
+  .svc-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 70px;
+    gap: 8px;
+    padding: 7px 20px;
+    font-size: 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .svc-row.svc-head {
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.06em;
+    color: var(--text-faint);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    position: sticky;
+    top: 0;
+    background: var(--surface);
+    z-index: 1;
   }
 
-  .svc-table td {
-    padding: 5px 8px;
+  .svc-intent {
+    color: var(--text-muted);
   }
 
-  .svc-table tr:nth-child(even) td {
-    background: rgba(255,255,255,0.02);
+  .svc-provider {
+    color: var(--text);
   }
 
   .svc-price {
-    font-family: "SF Mono", "Fira Code", monospace;
-    color: #94a3b8;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    text-align: right;
   }
 
-  #service-map-body {
-    max-height: 280px;
-    overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: #1e293b #131c2e;
+  /* ── Architecture Diagram ── */
+  .arch-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 20px;
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--text-faint);
+    border-top: 1px solid var(--border);
+    letter-spacing: 0.02em;
+  }
+
+  .arch-node {
+    padding: 3px 10px;
+    border-radius: 3px;
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+  }
+
+  .arch-node.highlight {
+    border-color: var(--border-accent);
+    color: var(--accent);
+  }
+
+  .arch-arrow {
+    color: var(--text-faint);
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 859px) {
+    .tx {
+      grid-template-columns: 6px 48px 1fr auto auto;
+      gap: 8px;
+      padding: 8px 16px;
+    }
+    .tx-saved { display: none; }
+    .stat-value { font-size: 1.2rem; }
+    .stat-cell { padding: 14px 18px; }
+  }
+
+  @media (max-width: 480px) {
+    .stats-row { grid-template-columns: 1fr 1fr; }
+    .tx-ms { display: none; }
   }
 </style>
 </head>
 <body>
+<div class="shell">
+
   <header>
-    <span class="logo">&#9889; MPP ROUTER</span>
-    <span class="status">
-      <span class="dot" id="status-dot"></span>
-      <span id="status-text">Connecting...</span>
-      <span class="mode-badge mode-${paymentMode}">${paymentMode}</span>
-    </span>
+    <div class="logo">
+      <div class="logo-mark">R</div>
+      <div class="logo-text">mpprouter <span>v1</span></div>
+    </div>
+    <div class="header-right">
+      <div class="live-indicator">
+        <span class="live-dot" id="live-dot"></span>
+        <span id="live-text">connecting</span>
+      </div>
+      <span class="mode-tag mode-${paymentMode}">${paymentMode}</span>
+    </div>
   </header>
 
-  <div class="grid">
-    <div class="panel">
-      <div class="panel-label">Live Transactions</div>
-      <div id="feed"><div class="empty-state">Waiting for requests...</div></div>
+  <!-- Stats Row -->
+  <div class="stats-row">
+    <div class="stat-cell">
+      <div class="stat-label">${isPaid ? 'Net Revenue' : 'Total Saved'}</div>
+      <div class="stat-value accent" id="hero-val">$0.00</div>
+      <div class="stat-sub" id="hero-sub">${isPaid ? '0.0% margin' : '0.0% cheaper'}</div>
     </div>
+    ${isPaid ? `
+    <div class="stat-cell">
+      <div class="stat-label">Gross Charged</div>
+      <div class="stat-value" id="stat-charged">$0.00</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-label">Upstream Cost</div>
+      <div class="stat-value" id="stat-spent">$0.00</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-label">Requests</div>
+      <div class="stat-value" id="stat-count">0</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-label">Loss</div>
+      <div class="stat-value red" id="stat-loss">$0.00</div>
+    </div>
+    ` : `
+    <div class="stat-cell">
+      <div class="stat-label">Total Spent</div>
+      <div class="stat-value" id="stat-spent">$0.00</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-label">Would Have Cost</div>
+      <div class="stat-value" id="stat-would">$0.00</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-label">Requests</div>
+      <div class="stat-value" id="stat-count">0</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-label">Budget Left</div>
+      <div class="stat-value" id="stat-budget">&infin;</div>
+    </div>
+    `}
+  </div>
 
-    <div class="panel">
-      <div class="panel-label">${isPaid ? "Revenue" : "Savings"}</div>
-      <div class="hero-saved mono" id="hero-saved">$0.0000</div>
-      <div class="hero-pct" id="hero-pct">${isPaid ? "0% margin" : "0% saved"}</div>
-      <div class="stat-grid">
-        ${isPaid ? `
-        <div class="stat-box"><label>Gross Charged</label><div class="val" id="stat-charged">$0.0000</div></div>
-        <div class="stat-box"><label>Upstream Cost</label><div class="val" id="stat-spent">$0.0000</div></div>
-        <div class="stat-box"><label>Requests</label><div class="val" id="stat-count">0</div></div>
-        <div class="stat-box"><label>Loss (failed)</label><div class="val loss" id="stat-loss">$0.0000</div></div>
-        ` : `
-        <div class="stat-box"><label>Spent</label><div class="val" id="stat-spent">$0.0000</div></div>
-        <div class="stat-box"><label>Would've been</label><div class="val" id="stat-would">$0.0000</div></div>
-        <div class="stat-box"><label>Requests</label><div class="val" id="stat-count">0</div></div>
-        <div class="stat-box"><label>Budget left</label><div class="val" id="stat-budget">No limit</div></div>
-        `}
+  <div class="main-grid">
+
+    <!-- Live Feed -->
+    <div class="panel" style="animation-delay:0.25s">
+      <div class="panel-head">
+        <span class="panel-title">Live Transactions</span>
+        <span class="panel-title" id="tx-rate"></span>
+      </div>
+      <div class="panel-body">
+        <div id="feed">
+          <div class="empty-state">
+            <div class="empty-icon">~</div>
+            Waiting for requests...
+          </div>
+        </div>
+      </div>
+      <div class="arch-bar">
+        <span class="arch-node">Agent</span>
+        <span class="arch-arrow">&rarr;</span>
+        <span class="arch-node highlight">mpprouter</span>
+        <span class="arch-arrow">&rarr;</span>
+        <span class="arch-node">Provider</span>
       </div>
     </div>
 
-    <div class="panel">
-      <div class="panel-label">Price Comparison <select class="intent-select" id="intent-select"></select></div>
-      <div id="price-chart"></div>
-    </div>
+    <div class="right-col">
 
-    <div class="panel">
-      <div class="panel-label">Service Map</div>
-      <div id="service-map-body">
-        <table class="svc-table">
-          <thead><tr><th>Intent</th><th>Provider</th><th>$/req</th></tr></thead>
-          <tbody id="svc-tbody"></tbody>
-        </table>
+      <!-- Activity Sparkline -->
+      <div class="panel" style="animation-delay:0.3s">
+        <div class="panel-head">
+          <span class="panel-title">Activity</span>
+          <span class="panel-title" id="spark-total"></span>
+        </div>
+        <div class="sparkline-wrap">
+          <div class="sparkline-row" id="sparkline"></div>
+          <div class="spark-label">
+            <span id="spark-start"></span>
+            <span>now</span>
+          </div>
+        </div>
       </div>
+
+      <!-- Price Comparison -->
+      <div class="panel" style="animation-delay:0.35s">
+        <div class="panel-head">
+          <span class="panel-title">Price Comparison</span>
+          <select class="intent-picker" id="intent-select"></select>
+        </div>
+        <div class="panel-body">
+          <div id="price-chart" class="price-list"></div>
+        </div>
+      </div>
+
+      <!-- Service Map -->
+      <div class="panel" style="animation-delay:0.4s">
+        <div class="panel-head">
+          <span class="panel-title">Service Map</span>
+        </div>
+        <div class="panel-body">
+          <div class="svc-grid" id="svc-grid">
+            <div class="svc-row svc-head">
+              <span>Intent</span>
+              <span>Provider</span>
+              <span style="text-align:right">$/req</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
+</div>
+
 <script>
 (function() {
-  var PAID_MODE = ${isPaid};
+  var PAID = ${isPaid};
   var priceData = [];
-  var MAX_FEED = 50;
+  var MAX_FEED = 60;
+
+  // Sparkline: 30 buckets, 1-minute each
+  var SPARK_BUCKETS = 30;
+  var sparkCounts = new Array(SPARK_BUCKETS).fill(0);
+  var sparkStart = Date.now();
 
   function fmt(n) {
-    if (n == null) return '—';
+    if (n == null) return '\\u2014';
     return '$' + n.toFixed(4);
   }
 
-  function fmtPct(n, label) {
-    return n.toFixed(1) + '% ' + label;
+  function fmtShort(n) {
+    if (n == null) return '\\u2014';
+    if (n >= 1) return '$' + n.toFixed(2);
+    return '$' + n.toFixed(4);
   }
 
   function timeStr(ts) {
-    var d = new Date(ts);
-    return d.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    return new Date(ts).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
   }
 
-  function makeTxRow(tx) {
-    var row = document.createElement('div');
-    row.className = 'tx-row';
-    var saved = (tx.savedVsNext != null && tx.savedVsNext > 0) ? '<span class="tx-saved">(saved ' + fmt(tx.savedVsNext) + ')</span>' : '';
-    row.innerHTML =
-      '<span class="tx-dot ' + tx.status + '"></span>' +
+  function makeTx(tx) {
+    var el = document.createElement('div');
+    el.className = 'tx';
+    var saved = (tx.savedVsNext != null && tx.savedVsNext > 0)
+      ? '<span class="tx-saved">' + fmt(tx.savedVsNext) + '</span>'
+      : '<span class="tx-saved"></span>';
+    el.innerHTML =
+      '<span class="tx-pip ' + tx.status + '"></span>' +
       '<span class="tx-time">' + timeStr(tx.timestamp) + '</span>' +
-      '<span class="tx-intent">' + tx.intent + '</span>' +
-      '<span class="tx-arrow">&rarr;</span>' +
-      '<span class="tx-provider">' + tx.provider + '</span>' +
-      '<span class="tx-amount">' + fmt(tx.amount) + '</span>' +
+      '<span class="tx-route">' +
+        '<span class="tx-intent-tag">' + tx.intent + '</span>' +
+        '<span class="tx-arrow">&#8594;</span>' +
+        '<span class="tx-provider">' + tx.provider + '</span>' +
+      '</span>' +
+      '<span class="tx-cost">' + fmt(tx.amount) + '</span>' +
       saved +
-      '<span class="tx-latency">' + tx.latencyMs + 'ms</span>';
-    return row;
+      '<span class="tx-ms">' + tx.latencyMs + 'ms</span>';
+    return el;
   }
 
-  function renderFeed(transactions) {
-    var feed = document.getElementById('feed');
-    feed.innerHTML = '';
-    if (!transactions || transactions.length === 0) {
-      feed.innerHTML = '<div class="empty-state">Waiting for requests...</div>';
+  function renderFeed(txs) {
+    var f = document.getElementById('feed');
+    f.innerHTML = '';
+    if (!txs || !txs.length) {
+      f.innerHTML = '<div class="empty-state"><div class="empty-icon">~</div>Waiting for requests...</div>';
       return;
     }
-    var reversed = transactions.slice().reverse();
-    reversed.forEach(function(tx) {
-      feed.appendChild(makeTxRow(tx));
-    });
+    txs.slice().reverse().forEach(function(tx) { f.appendChild(makeTx(tx)); });
+  }
+
+  function addTx(tx) {
+    var f = document.getElementById('feed');
+    var empty = f.querySelector('.empty-state');
+    if (empty) empty.remove();
+    f.insertBefore(makeTx(tx), f.firstChild);
+    while (f.children.length > MAX_FEED) f.removeChild(f.lastChild);
+
+    // Update sparkline
+    var bucket = Math.min(SPARK_BUCKETS - 1, Math.floor((Date.now() - sparkStart) / 60000));
+    if (bucket >= 0 && bucket < SPARK_BUCKETS) sparkCounts[bucket]++;
+    renderSparkline();
   }
 
   function updateStats(s) {
-    var flash = function(el) {
-      if (!el) return;
-      el.style.opacity = '0.4';
-      setTimeout(function() { el.style.opacity = '1'; }, 50);
-    };
-    var el;
-
-    if (PAID_MODE) {
-      // Revenue mode
-      el = document.getElementById('hero-saved');
-      el.textContent = fmt(s.totalRevenue);
-      flash(el);
-      document.getElementById('hero-pct').textContent = fmtPct(s.marginPercent, 'margin');
-      el = document.getElementById('stat-charged');
-      if (el) { el.textContent = fmt(s.totalCharged); flash(el); }
-      el = document.getElementById('stat-spent');
-      if (el) { el.textContent = fmt(s.totalSpent); flash(el); }
-      el = document.getElementById('stat-count');
-      if (el) { el.textContent = s.transactionCount; flash(el); }
-      el = document.getElementById('stat-loss');
-      if (el) { el.textContent = fmt(s.totalLoss); flash(el); }
+    if (PAID) {
+      setText('hero-val', fmtShort(s.totalRevenue));
+      setText('hero-sub', s.marginPercent.toFixed(1) + '% margin');
+      setText('stat-charged', fmtShort(s.totalCharged));
+      setText('stat-spent', fmtShort(s.totalSpent));
+      setText('stat-count', s.transactionCount);
+      setText('stat-loss', fmtShort(s.totalLoss));
     } else {
-      // Savings mode
-      el = document.getElementById('hero-saved');
-      el.textContent = fmt(s.totalSaved);
-      flash(el);
-      document.getElementById('hero-pct').textContent = fmtPct(s.savingsPercent, 'saved');
-      el = document.getElementById('stat-spent');
-      if (el) { el.textContent = fmt(s.totalSpent); flash(el); }
-      el = document.getElementById('stat-would');
-      if (el) { el.textContent = fmt(s.totalSpent + s.totalSaved); flash(el); }
-      el = document.getElementById('stat-count');
-      if (el) { el.textContent = s.transactionCount; flash(el); }
-      el = document.getElementById('stat-budget');
-      if (el) { el.textContent = s.remainingBudget != null ? fmt(s.remainingBudget) : 'No limit'; flash(el); }
+      setText('hero-val', fmtShort(s.totalSaved));
+      setText('hero-sub', s.savingsPercent.toFixed(1) + '% cheaper');
+      setText('stat-spent', fmtShort(s.totalSpent));
+      setText('stat-would', fmtShort(s.totalSpent + s.totalSaved));
+      setText('stat-count', s.transactionCount);
+      var b = document.getElementById('stat-budget');
+      if (b) b.textContent = s.remainingBudget != null ? fmtShort(s.remainingBudget) : '\\u221e';
     }
   }
 
-  function renderPriceChart(intent) {
+  function setText(id, val) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = val;
+  }
+
+  // Sparkline
+  function renderSparkline() {
+    var wrap = document.getElementById('sparkline');
+    var max = Math.max.apply(null, sparkCounts) || 1;
+    var total = sparkCounts.reduce(function(a, b) { return a + b; }, 0);
+    var html = '';
+    for (var i = 0; i < SPARK_BUCKETS; i++) {
+      var h = Math.max(2, (sparkCounts[i] / max) * 48);
+      var active = sparkCounts[i] > 0 ? ' active' : '';
+      html += '<div class="spark-bar' + active + '" style="height:' + h + 'px"></div>';
+    }
+    wrap.innerHTML = html;
+    setText('spark-total', total + ' req');
+
+    var startEl = document.getElementById('spark-start');
+    if (startEl) startEl.textContent = SPARK_BUCKETS + 'm ago';
+  }
+
+  // Prices
+  function renderPrices(intent) {
     var entry = priceData.find(function(p) { return p.intent === intent; });
     var chart = document.getElementById('price-chart');
     if (!entry || !entry.providers.length) {
@@ -470,94 +849,80 @@ export function getDashboardHtml(paymentMode: PaymentMode = "free"): string {
     }
     var providers = entry.providers.filter(function(p) { return p.priceUsd != null; });
     if (!providers.length) {
-      chart.innerHTML = '<div class="empty-state">All dynamic pricing</div>';
+      chart.innerHTML = '<div class="empty-state">Dynamic pricing only</div>';
       return;
     }
     providers.sort(function(a, b) { return a.priceUsd - b.priceUsd; });
-    var maxPrice = providers[providers.length - 1].priceUsd;
+    var maxP = providers[providers.length - 1].priceUsd;
     var html = '';
     providers.forEach(function(p, i) {
-      var pct = maxPrice > 0 ? (p.priceUsd / maxPrice) * 100 : 0;
-      var hue = providers.length === 1 ? 142 : 142 - (i / (providers.length - 1)) * 100;
-      html += '<div class="bar-row">' +
-        '<span class="bar-name">' + p.service + '</span>' +
-        '<div class="bar-track"><div class="bar-fill" style="width:' + Math.max(pct, 3) + '%;background:hsl(' + hue + ',60%,55%)"></div></div>' +
-        '<span class="bar-price">' + fmt(p.priceUsd) + '</span></div>';
+      var pct = maxP > 0 ? Math.max((p.priceUsd / maxP) * 100, 4) : 4;
+      var tier = i === 0 ? 'cheapest' : (i < providers.length - 1 ? 'mid' : 'expensive');
+      if (providers.length === 1) tier = 'cheapest';
+      var badge = i === 0 ? '<span class="price-badge">BEST</span>' : '';
+      html += '<div class="price-row">' +
+        '<span class="price-name">' + p.service + '</span>' +
+        '<div class="price-track"><div class="price-fill ' + tier + '" style="width:' + pct + '%">' + badge + '</div></div>' +
+        '<span class="price-val">' + fmt(p.priceUsd) + '</span></div>';
     });
     chart.innerHTML = html;
   }
 
-  function renderServiceMap() {
-    var tbody = document.getElementById('svc-tbody');
-    var html = '';
-    priceData.forEach(function(entry) {
-      var top2 = entry.providers.slice(0, 2);
-      top2.forEach(function(p) {
-        html += '<tr><td>' + entry.intent + '</td><td>' + p.service + '</td>' +
-          '<td class="svc-price">' + (p.priceUsd != null ? fmt(p.priceUsd) : 'dynamic') + '</td></tr>';
-      });
-    });
-    tbody.innerHTML = html;
-  }
-
-  function populateIntentSelect() {
+  function populateSelect() {
     var sel = document.getElementById('intent-select');
     sel.innerHTML = '';
-    priceData.forEach(function(entry) {
-      var opt = document.createElement('option');
-      opt.value = entry.intent;
-      opt.textContent = entry.intent;
-      sel.appendChild(opt);
+    priceData.forEach(function(e) {
+      var o = document.createElement('option');
+      o.value = e.intent;
+      o.textContent = e.intent;
+      sel.appendChild(o);
     });
     var ws = priceData.find(function(p) { return p.intent === 'web_search'; });
     if (ws) sel.value = 'web_search';
-    sel.addEventListener('change', function() {
-      renderPriceChart(sel.value);
-    });
+    sel.addEventListener('change', function() { renderPrices(sel.value); });
   }
 
-  function addTxToFeed(tx) {
-    var feed = document.getElementById('feed');
-    var empty = feed.querySelector('.empty-state');
-    if (empty) empty.remove();
-    feed.insertBefore(makeTxRow(tx), feed.firstChild);
-    while (feed.children.length > MAX_FEED) {
-      feed.removeChild(feed.lastChild);
-    }
+  function renderServiceMap() {
+    var grid = document.getElementById('svc-grid');
+    var html = '<div class="svc-row svc-head"><span>Intent</span><span>Provider</span><span style="text-align:right">$/req</span></div>';
+    priceData.forEach(function(e) {
+      e.providers.slice(0, 2).forEach(function(p) {
+        html += '<div class="svc-row">' +
+          '<span class="svc-intent">' + e.intent + '</span>' +
+          '<span class="svc-provider">' + p.service + '</span>' +
+          '<span class="svc-price">' + (p.priceUsd != null ? fmt(p.priceUsd) : 'dynamic') + '</span></div>';
+      });
+    });
+    grid.innerHTML = html;
   }
 
   // SSE
   function connectSSE() {
     var es = new EventSource('/events');
     es.addEventListener('open', function() {
-      document.getElementById('status-dot').classList.add('live');
-      document.getElementById('status-text').textContent = 'Live';
+      document.getElementById('live-dot').classList.add('connected');
+      document.getElementById('live-text').textContent = 'live';
     });
-    es.addEventListener('stats', function(e) {
-      updateStats(JSON.parse(e.data));
-    });
-    es.addEventListener('transaction', function(e) {
-      addTxToFeed(JSON.parse(e.data));
-    });
+    es.addEventListener('stats', function(e) { updateStats(JSON.parse(e.data)); });
+    es.addEventListener('transaction', function(e) { addTx(JSON.parse(e.data)); });
     es.addEventListener('error', function() {
-      document.getElementById('status-dot').classList.remove('live');
-      document.getElementById('status-text').textContent = 'Reconnecting...';
+      document.getElementById('live-dot').classList.remove('connected');
+      document.getElementById('live-text').textContent = 'reconnecting';
     });
   }
 
   // Init
+  renderSparkline();
   Promise.all([
     fetch('/stats').then(function(r) { return r.json(); }),
     fetch('/prices').then(function(r) { return r.json(); })
-  ]).then(function(results) {
-    var stats = results[0];
-    var prices = results[1];
+  ]).then(function(res) {
+    var stats = res[0]; var prices = res[1];
     priceData = prices;
-
     updateStats(stats);
     renderFeed(stats.recentTransactions);
-    populateIntentSelect();
-    renderPriceChart(document.getElementById('intent-select').value || 'web_search');
+    populateSelect();
+    renderPrices(document.getElementById('intent-select').value || 'web_search');
     renderServiceMap();
     connectSSE();
   });
